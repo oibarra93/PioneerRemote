@@ -27,6 +27,9 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.StringTokenizer;
 
+import net.sf.expectit.Expect;
+import net.sf.expectit.ExpectBuilder;
+
 public class MainActivity extends AppCompatActivity implements Runnable, TelnetNotificationHandler {
     private static TelnetClient tc;
     String command = null;
@@ -37,22 +40,33 @@ public class MainActivity extends AppCompatActivity implements Runnable, TelnetN
     int remoteport;
     FileOutputStream fout = null;
     String line;
-    public String updateText(){
+    public void updateText(View view) throws IOException {
+        StringBuilder wholeBuffer = new StringBuilder();
+        Expect expectorObject = new ExpectBuilder()
+                .withOutput(tc.getOutputStream())
+                .withInputs(tc.getInputStream())
+                .withEchoOutput(wholeBuffer)
+                .withEchoInput(wholeBuffer)
+                .withExceptionOnFailure()
+                .build();
         command = commandText.getText().toString();
         commandText.setText("");
         extResponse.append("\n" + command);
-        return command;
+        expectorObject.sendLine(command);
+
     }
 
-    public void connectButton(View view){
+    public void connectButton(View view) throws IOException {
+
+
         remoteip = hostnameText.getText().toString();
         extResponse.append("\n" + remoteip + ":" + remoteport + " is connecting...");
-        this.connectClient();
+        tc.connect(remoteip, remoteport);
+        extResponse.append("Connected!");
     }
 
-    public void connectClient(){
-        while (true)
-        {
+    /*public void connectClient(){
+
             boolean end_loop = false;
             try
             {
@@ -84,7 +98,7 @@ public class MainActivity extends AppCompatActivity implements Runnable, TelnetN
                         if(ret_read > 0)
                         {
 
-                            line = this.updateText(); // deliberate use of default charset
+                            line = commandText.getText().toString(); // deliberate use of default charset
                             if(line.startsWith("AYT"))
                             {
                                 try
@@ -215,8 +229,9 @@ public class MainActivity extends AppCompatActivity implements Runnable, TelnetN
                 Toast.makeText(getApplicationContext(),"Exception while connecting:" + e.getMessage(),Toast.LENGTH_SHORT).show();
                 System.exit(1);
             }
-        }
-    }
+        }*/
+
+
 
     /**
      * Main for the TelnetClientExample.
